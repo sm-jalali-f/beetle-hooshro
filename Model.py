@@ -373,13 +373,13 @@ class World:
         return int(self.scores[1])
 
     def change_strategy(self, beetle_type, front_right, front, front_left, move_strategy):
-        self.queue.put(Event('s', [[beetle_type, front_right, front, front_left, move_strategy.value]]))
+        self.queue.put(Event('s', [beetle_type, front_right, front, front_left, move_strategy.value]))
 
     def deterministic_move(self, beetle, move):
-        self.queue.put(Event('m', [[beetle.game_id, move.value]]))
+        self.queue.put(Event('m', [beetle.game_id, move.value]))
 
     def change_type(self, beetle, new_type):
-        self.queue.put(Event('c', [[beetle.game_id, new_type]]))
+        self.queue.put(Event('c', [beetle.game_id, new_type]))
 
     def get_map(self):
         return self.game_map

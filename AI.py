@@ -8,6 +8,7 @@ __author__ = 'RezaS'
 class AI:
     def do_turn(self, world):
         beetles = world.get_map().get_beetles_list()
+
         for beetle in beetles:
             if randint(0, 100) % 3 == 0:
                 world.change_type(beetle, BeetleType.HIGH.value)
