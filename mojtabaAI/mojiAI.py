@@ -4,67 +4,77 @@ from Model import Move, BeetleType
 class AI:
     def __init__(self):
         self.heuristic_matrix = None
+        self.game_matrix = None
         self.team = 0
+        self.map_width = 0
+        self.map_height = 0
+
+        # todo: main price factor should be base on wold constants => world.get_constants()
+        # todo: what about << sick wing >> beetles ??
+        # todo: this values are not accurate :) this is just for test
         self.price_dictionary = {
-            "ally_normal": 1,
-            "ally_wing": 2,
-            "ally_sick": -0.5,
-            "enemy_normal": -1,
-            "enemy_wing": -0.5,
-            "enemy_sick": -1,
+            "ally": {
+                "normal": 1,
+                "wing": 2,
+                "sick": -0.5
+            },
+            "enemy": {
+                "normal": 1,
+                "wing": -0.5,
+                "sick": -1
+            },
             "food": 2,
             "trash": -2,
             "slipper": -5,
-            "portal": 0
+            "teleport": 0
         }
 
     def do_turn(self, world):
         if world.get_current_turn() == 0:
             self.team = world.get_map().team
+            self.map_height = world.get_map().get_height()
+            self.map_width = world.get_map().get_width()
         self.initial_heuristic_matrix(world)
-        self.update_heuristic_matrix(world)
-        a = [0, 1, 2]
-        print(world.get_map().get_game_2d_table())
-        if world.get_current_turn() == 0:
-            for i in range(0, 3):
-                for j in range(0, 2):
-                    for k in range(0, 3):
-                        world.change_strategy(BeetleType.LOW.value, a[i], a[j], a[k], Move.step_forward)
-                        world.change_strategy(BeetleType.HIGH.value, a[i], a[j], a[k], Move.step_forward)
-        world.change_strategy(BeetleType.LOW.value, a[0], a[0], a[0], Move.step_forward)
-        world.change_strategy(BeetleType.LOW.value, a[1], a[1], a[1], Move.turn_left)
+        self.update_heuristic_matrix()
+        print(self.heuristic_matrix)
 
     def initial_heuristic_matrix(self, world):
         self.heuristic_matrix = [[0] * world.get_map().get_height()] * world.get_map().get_width()
+        self.game_matrix = world.get_map().get_game_2d_table()
 
-    def update_heuristic_matrix(self, world):
-        for ally_beetle in world.get_my_beetles():
-            self.propagate_ally_effect(ally_beetle)
-        for enemy_beetle in world.get_opponent_beetles():
-            self.propagate_enemy_effect(enemy_beetle)
-        for food in world.get_foods_list():
-            self.propagate_food_effect(food)
-        for trash in world.get_trashes_list():
-            self.propagate_trash_effect(trash)
-        for slipper in world.get_slippers_list():
-            self.propagate_slipper_effect(slipper)
-        for teleport in world.get_teleport_list():
-            self.propagate_teleport_effect(teleport)
+    def update_heuristic_matrix(self):
+        for col in self.game_matrix:
+            for obj in col:
+                if obj:
+                    self.propagate_effect(obj)
 
-    def propagate_ally_effect(self, ally_beetle):
-        pass
+    def propagate_effect(self, obj):
+        obj_pos = obj.get_position()
+        min_col_distance = [min(abs(obj_pos.col-col), abs(self.map_width-abs(obj_pos.col-col)))
+                            for col in range(self.map_width)]
+        min_row_distance = [min(abs(obj_pos.row-row), abs(self.map_height-abs(obj_pos.row-row)))
+                            for row in range(self.map_height)]
 
-    def propagate_enemy_effect(self, enemy_beetle):
-        pass
+        for col in range(self.map_width):
+            for row in range(self.map_height):
+                self.heuristic_matrix[col][row] += (min_col_distance[col] + min_row_distance[row]) * self.get_obj_price(obj)
 
-    def propagate_food_effect(self, food):
-        pass
-
-    def propagate_trash_effect(self, trash):
-        pass
-
-    def propagate_slipper_effect(self, slipper):
-        pass
-
-    def propagate_teleport_effect(self, teleport):
-        pass
+    def get_obj_price(self, obj):
+        obj_name = obj.__class__.__name__
+        if obj_name == "Beetle":
+            if obj.team == self.team:
+                if obj.is_sick():
+                    return self.price_dictionary["ally"]["sick"]
+                elif obj.has_wing():
+                    return self.price_dictionary["ally"]["wing"]
+                else:
+                    return self.price_dictionary["ally"]["normal"]
+            else:
+                if obj.is_sick():
+                    return self.price_dictionary["enemy"]["sick"]
+                elif obj.has_wing():
+                    return self.price_dictionary["enemy"]["wing"]
+                else:
+                    return self.price_dictionary["enemy"]["normal"]
+        else:
+            return self.price_dictionary[obj_name.lower()]
