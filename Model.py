@@ -177,7 +177,7 @@ class Map:
         elif entity_type == 2:
             self.trashes[item_game_id] = Trash([diff_args[0], diff_args[2], diff_args[3]])
         else:
-            self.slippers[item_game_id] = Slipper([diff_args[0], diff_args[2], diff_args[3]])
+            self.slippers[item_game_id] = Slipper([diff_args[0], diff_args[2], diff_args[3]], self.constants.slipper_valid_time)
 
     def _rebuild_game_map(self):
         self.game_map = [[0 for x in range(self.col_number)] for y in range(self.row_number)]
