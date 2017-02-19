@@ -3,7 +3,12 @@ import os
 __author__ = 'pezzati'
 
 from Network import *
-from AI import AI
+import sys
+if sys.argv[1] == '1':
+    from mojtabaAI.mojiAI import AI
+elif sys.argv[1] == '2':
+    from freezAi.RandomAi import AI
+
 from threading import Thread
 from queue import Queue
 
